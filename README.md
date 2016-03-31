@@ -17,4 +17,11 @@ To run a test using GateKeeper, you need to prepare the following:
 5. Genomic read dataset in ACGT format.
 
 Simply, Synthesize and Implement the source code using Vivado, then generate a bitstream file (.bit). Program your VC709 board with the generated file. Run the host application using the following command:
-`./GateKeeper 512 output.out`
+`
+./GateKeeper 512 output.out
+`
+
+You can verify if your VC709 board is configured correctly and reachable through your PCIe using the following command:
+`
+sudo lspci -vvv -d 10EE:*
+`
