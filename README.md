@@ -25,3 +25,46 @@ You can verify if your VC709 board is configured correctly and reachable through
 `
 sudo lspci -vvv -d 10EE:*
 `
+
+
+***
+
+## How to install Vivado on UBUNTU?
+`*give root permissions to the current username
+pkexec visudo
+*then add: 
+alser ALL=(ALL:ALL) ALL
+*after this line: root ALL=(ALL:ALL) ALL
+
+*create folder in home to install xilinx inside it
+sudo mkdir /home/Xilinx
+sudo chmod 777 /home/Xilinx
+sudo ln -s /home/Xilinx /opt/Xilinx
+
+*install xilinx
+cd /home/alser/Downloads/Xilinx_Vivado_SDK_Lin_2014.2_0626_1 
+sudo chmod +x ./xsetup
+sudo chmod +x /home/alser/Downloads/Xilinx_Vivado_SDK_Lin_2014.2_0626_1/tps/lnx64/jre/bin
+sudo ./xsetup 
+
+*change the Admin permission, alser is a username
+sudo chgrp -R alser .Xilinx
+sudo chown -R alser .Xilinx
+
+sudo chgrp -R alser /home/Xilinx
+sudo chown -R alser /home/Xilinx
+
+*install the drivers
+cd /home/Xilinx/Vivado/2014.2/data/xicom/cable_drivers/lin64/install_script/install_drivers/
+sudo /home/Xilinx/Vivado/2014.2/data/xicom/cable_drivers/lin64/install_script/install_drivers/install_drivers
+
+*prepare the environment and create alias to start vivado
+sudo gedit .bashrc
+
+*then add to the end of the output file:
+(this line may or not important but try first without it)export XILINXD_LICENSE_FILE=/home/alser/.Xilinx/Xilinx.lic
+alias vivado='source /home/Xilinx/Vivado/2014.2/settings64.sh && vivado'
+
+*to start vivado type in the terminal: 
+vivado
+`
