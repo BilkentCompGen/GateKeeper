@@ -17,9 +17,9 @@ To run a test using GateKeeper, you need to prepare the following:
 5. Genomic read dataset in ACGT format.
 
 GateKeeper design requires no user IP configuration and generation. The design also includes pre-compiled bit-file in
-<GateKeeper\FPGA Application\GateKeeper_VC709.bit>.
-Simply, Download the bitstream file and program your VC709 board. For advanced users: you can run a new synthesise and implementation using the Vivado project in <GateKeeper\FPGA Application\VC709_Gen3x4If128\GateKeeper.xpr>. We highly recommend using Vivado 2014.4. 
-Run the host application provided in <GateKeeper\Host Application\GateKeeper_test.cpp> using the following command:
+```GateKeeper\FPGA Application\GateKeeper_VC709.bit```
+Simply, Download the bitstream file and program your VC709 board. For advanced users: you can run a new synthesise and implementation using the Vivado project in ```GateKeeper\FPGA Application\VC709_Gen3x4If128\GateKeeper.xpr``` We highly recommend using Vivado 2014.4. 
+Run the host application provided in ```GateKeeper\Host Application\GateKeeper_test.cpp``` using the following command:
 
 ```
 $ ./GateKeeper_test [INPUT_SIZE_IN_BYTES] [OUTPUT_FILE_NAME]
