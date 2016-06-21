@@ -46,7 +46,7 @@ module SHDScheduler #(parameter DNA_DATA_WIDTH = 128, NUM_PES = 4) (
     
     //Register incoming dna data
     always@(posedge clk) begin
-        dna_valid_r <= 1'b0;
+        //dna_valid_r <= 1'b0;
         
         if(rst) begin
             dna_data_r <= 0;

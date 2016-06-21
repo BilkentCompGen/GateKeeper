@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pcie_bram_7vx_req.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 // Project      : Virtex-7 FPGA Gen3 Integrated Block for PCI Express         //
 // Filename     : pcie3_7x_0_pcie_bram_7vx_req.v                                         //

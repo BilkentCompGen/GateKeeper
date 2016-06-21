@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_gt_top.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 
 //----------------------------------------------------------------------------//
@@ -118,7 +118,8 @@ module pcie3_7x_0_gt_top #
   parameter               TX_MARGIN_LOW_3           =7'b1000010 ,                          // 350 mV
   parameter               TX_MARGIN_LOW_4           =7'b1000000 ,
 
-  parameter               PCIE_LINK_SPEED           = 3
+  parameter               PCIE_LINK_SPEED           = 3,
+  parameter               PCIE_ASYNC_EN             = "FALSE"
 
 ) (
 
@@ -437,8 +438,8 @@ module pcie3_7x_0_gt_top #
   output      [31:0]              PIPE_DEBUG,
   output      [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]     PIPE_JTAG_RDY,
 
-
-
+  input      [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]     PIPE_TXINHIBIT,       
+  input     [(PL_LINK_CAP_MAX_LINK_WIDTH*16)-1:0]  PIPE_PCSRSVDIN,      
   input       [ 2:0]              PIPE_TXPRBSSEL,        
   input       [ 2:0]              PIPE_RXPRBSSEL,       
   input                           PIPE_TXPRBSFORCEERR, 
@@ -500,8 +501,16 @@ module pcie3_7x_0_gt_top #
   output                                             PIPE_TXOUTCLK_OUT,      // PCLK       | PCLK
   output [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]            PIPE_RXOUTCLK_OUT,      // RX recovered clock (for debug only)
   output [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]            PIPE_PCLK_SEL_OUT,      // PCLK       | PCLK
-  output                                             PIPE_GEN3_OUT           // PCLK       | PCLK
-
+  output                                             PIPE_GEN3_OUT,          // PCLK       | PCLK
+  
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    CPLLPD, 
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH*2)-1:0]  TXPD,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH*2)-1:0]  RXPD,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    TXPDELECIDLEMODE,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    TXDETECTRX,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    TXELECIDLE,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH-1)>>2:0] QPLLPD, 
+  input                                       POWERDOWN
 );
 
   wire  [31:0]  gt_rx_data_k_wire;
@@ -544,16 +553,15 @@ module pcie3_7x_0_gt_top #
   wire   [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]  pipe_rxsync_done_w;
   assign pipe_rxsync_done = {{(8-PL_LINK_CAP_MAX_LINK_WIDTH){1'b0}},pipe_rxsync_done_w};
 
-
   localparam          PCIE_SIM_SPEEDUP   = PL_SIM_FAST_LINK_TRAINING;
-  localparam          PCIE_AUX_CDR_GEN3_EN = "TRUE";
 
 
 //---------- PIPE wrapper Module -------------------------------------------------
 pcie3_7x_0_pipe_wrapper #(
     .PCIE_SIM_MODE            ( PL_SIM_FAST_LINK_TRAINING ),
     .PCIE_SIM_SPEEDUP         ( PCIE_SIM_SPEEDUP ),
-    .PCIE_AUX_CDR_GEN3_EN     ( PCIE_AUX_CDR_GEN3_EN ),
+    .PCIE_AUX_CDR_GEN3_EN     ( "TRUE" ),
+    .PCIE_ASYNC_EN            ( PCIE_ASYNC_EN ),
     .PCIE_EXT_CLK             ( PCIE_EXT_CLK ),
     .PCIE_EXT_GT_COMMON       ( PCIE_EXT_GT_COMMON ),
     .PCIE_TXBUF_EN            ( PCIE_TXBUF_EN ),
@@ -577,7 +585,6 @@ pcie3_7x_0_pipe_wrapper #(
     .TX_MARGIN_LOW_4          (TX_MARGIN_LOW_4),
     .PCIE_USERCLK1_FREQ       ( USER_CLK_FREQ ),
     .PCIE_USERCLK2_FREQ       ( USER_CLK2_FREQ )
-
 ) pipe_wrapper_i (
 
     //---------- PIPE Clock & Reset Ports ------------------
@@ -722,8 +729,8 @@ pcie3_7x_0_pipe_wrapper #(
     .PIPE_LOOPBACK            ( PIPE_LOOPBACK),
 
     .PIPE_RXPRBSERR           ( PIPE_RXPRBSERR),
-
-
+    .PIPE_TXINHIBIT           ( PIPE_TXINHIBIT),
+    .PIPE_PCSRSVDIN           ( PIPE_PCSRSVDIN),
 
     .PIPE_RST_FSM             (PIPE_RST_FSM),
     .PIPE_QRST_FSM            (PIPE_QRST_FSM),
@@ -770,7 +777,15 @@ pcie3_7x_0_pipe_wrapper #(
     .PIPE_QDRP_FSM(),
     .PIPE_RXEQ_FSM(),
     .PIPE_TXEQ_FSM(),
-    .INT_MMCM_LOCK_OUT()
+    .INT_MMCM_LOCK_OUT(),
+    .CPLLPD                   (CPLLPD),
+    .TXPD                     (TXPD),
+    .RXPD                     (RXPD),
+    .TXPDELECIDLEMODE         (TXPDELECIDLEMODE),
+    .TXDETECTRX               (TXDETECTRX),
+    .TXELECIDLE               (TXELECIDLE),
+    .QPLLPD                   (QPLLPD),
+    .POWERDOWN                (POWERDOWN)
 
 );
 

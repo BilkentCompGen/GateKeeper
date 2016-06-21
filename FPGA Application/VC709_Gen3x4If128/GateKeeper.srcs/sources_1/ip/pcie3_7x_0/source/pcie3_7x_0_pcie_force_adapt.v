@@ -50,17 +50,17 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pcie_force_adapt.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 // Project      : Virtex-7 FPGA Gen3 Integrated Block for PCI Express         //
-// Filename     : pcie3_7x_0_pcie_top.v                                                  //
+// Filename     : pcie3_7x_0_pcie_top.v                             //
 // Description  : Instantiates GEN3 PCIe Integrated Block Wrapper and         //
 //                connects the IP to the PIPE Interface Pipeline module, the  //
 //                PCIe Initialization Controller, and the TPH Table           //
 //                implemented in a RAMB36                                     //
 //---------- PIPE Wrapper Hierarchy ------------------------------------------//
 //      pcie_top.v                                                            //  
-//          pcie_force_adapt.v                                                                    //
+//          pcie_force_adapt.v                                                //
 //          pcie_init_ctrl.v                                                  //
 //          pcie_tlp_tph_tbl_7vx.v                                            //
 //          pcie_7vx.v                                                        //
@@ -84,6 +84,7 @@ module pcie3_7x_0_pcie_force_adapt (
              
   input                     pipe_clk,
   input                     user_clk,
+  input                     rx_clk,
   input       [5:0]         cfg_ltssm_state,  
   input       [2:0]         cfg_current_speed,
   
@@ -137,9 +138,9 @@ localparam      RXJITTER_TEK              = "TRUE";
 (* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)      reg  [5:0]   cfg_ltssm_state_reg = 6'b0;
 (* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)      reg  [5:0]   cfg_ltssm_state_reg0 = 6'b0;
 (* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)      reg  [5:0]   cfg_ltssm_state_reg1 = 6'b0;
-(* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)      reg          speed_change = 1'b0;
+ reg          speed_change = 1'b0;
  reg          gen3_flag = 1'b1;
-(* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)      reg          cfg_loopback = 1'b0; 
+ reg          cfg_loopback = 1'b0; 
 
  always @ (posedge user_clk )
   begin
@@ -199,7 +200,7 @@ localparam      RXJITTER_TEK              = "TRUE";
 (* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)         reg          cfg_loopback_reg1  =1'b0;
 (* ASYNC_REG = "TRUE", SHIFT_EXTRACT = "NO" *)         reg          cfg_loopback_reg2  =1'b0;
     reg  [3:0]   eq_state           =4'b0001;
-
+    reg         pipe_eq_adapt = 1'b0;
     localparam  EQ_IDLE     = 4'b0001;
     localparam  EQ_ADAPT    = 4'b0010;
     localparam  EQ_RX_TEK   = 4'b0100;
@@ -259,7 +260,6 @@ localparam      RXJITTER_TEK              = "TRUE";
       end      
    endcase
    end
- 
 
   assign pipe_rx0_data_out = (eq_state == EQ_ADAPT) ? {32{1'b1}}: pipe_rx0_data_in;
   assign pipe_rx1_data_out = (eq_state == EQ_ADAPT) ? {32{1'b1}}: pipe_rx1_data_in;
@@ -278,5 +278,6 @@ localparam      RXJITTER_TEK              = "TRUE";
   assign pipe_rx5_eqcontrol_out =  ((eq_state == EQ_ADAPT) || (eq_state == EQ_RX_TEK)) ? 2'b11 : pipe_rx5_eqcontrol_in;
   assign pipe_rx6_eqcontrol_out =  ((eq_state == EQ_ADAPT) || (eq_state == EQ_RX_TEK)) ? 2'b11 : pipe_rx6_eqcontrol_in;
   assign pipe_rx7_eqcontrol_out =  ((eq_state == EQ_ADAPT) || (eq_state == EQ_RX_TEK)) ? 2'b11 : pipe_rx7_eqcontrol_in;
+
 
 endmodule

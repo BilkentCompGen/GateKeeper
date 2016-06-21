@@ -50,7 +50,7 @@
 ##
 ## Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 ## File       : pcie3_7x_0-PCIE_X0Y1.xdc
-## Version    : 3.0
+## Version    : 4.1
 #
 ###############################################################################
 # User Time Names / User Time Groups / Time Specs
@@ -127,9 +127,25 @@ create_generated_clock -name clk_250mhz_mux_x0y1 \
                         -source [get_pins gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/pclk_i1_bufgctrl.pclk_i1/I1] \
                         -divide_by 1 -add -master_clock [get_clocks -of [get_pins gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/pclk_i1_bufgctrl.pclk_i1/I1]] \
                         [get_pins gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/pclk_i1_bufgctrl.pclk_i1/O]
-set_clock_groups -name pcieclkmux -physically_exclusive -group clk_125mhz_mux_x0y1 -group clk_250mhz_mux_x0y1
+set_clock_groups -name pcieclkmux_x0y1 -physically_exclusive -group clk_125mhz_mux_x0y1 -group clk_250mhz_mux_x0y1
 set_false_path -to [get_pins {gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/pclk_i1_bufgctrl.pclk_i1/S0}]
 set_false_path -to [get_pins {gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/pclk_i1_bufgctrl.pclk_i1/S1}]
+
+#------------------------------------------------------------------------------
+# Asynchronous Pins
+#------------------------------------------------------------------------------
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/RXELECIDLE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/RXCDRLOCK}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/TXPHALIGNDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/TXPHINITDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/CPLLLOCK}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/RXPMARESETDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/RXPHALIGNDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/RXSYNCDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/TXDLYSRESETDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/TXSYNCDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/RXDLYSRESETDONE}]
+set_false_path -through [get_pins -hierarchical -filter {NAME=~*/QPLLLOCK}]
 #
 ###############################################################################
 # Physical Constraints

@@ -58,7 +58,7 @@ wire recv_fifo_full, recv_fifo_empty;
 reg recv_fifo_wren = 1'b0;
 
 //assign CHNL_RX_ACK = ~recv_fifo_full;
-assign CHNL_RX_DATA_REN = (state != STATE_IDLE);
+assign CHNL_RX_DATA_REN = (state != STATE_IDLE) && ~recv_fifo_full;
 
 
 //next state combinational logic
@@ -70,8 +70,11 @@ always@* begin
         STATE_IDLE: begin
             //accept the transaction if the sender is ready
             if(sender_ready & CHNL_RX) begin
-                state_next = STATE_FETCH_REF;
                 CHNL_RX_ACK = 1'b1;
+                
+                //if(CHNL_RX_DATA_VALID) begin
+                    state_next = STATE_FETCH_REF;
+                //end
             end
         
         end //STATE_IDLE
@@ -83,10 +86,8 @@ always@* begin
         end //STATE_FETCH_REF
         
         STATE_PROCESSING: begin
-            if(CHNL_RX_DATA_VALID) begin
-                if(dna_len == 1) begin
-                    state_next = STATE_IDLE;
-                end
+            if(dna_len == 0 && ~recv_fifo_full) begin
+                state_next = STATE_IDLE;
             end
         end //STATE_PROCESSING
     endcase
@@ -111,13 +112,14 @@ always@(posedge clk) begin
     else begin
         sender_en <= 1'b0;
         
-        if(CHNL_RX_ACK) begin
+        if(CHNL_RX_ACK /*&& CHNL_RX_DATA_VALID*/) begin
             dna_len <= CHNL_RX_LEN >> 2; //the first 4 words (16 bytes) are the reference dna data
             sender_en <= 1'b1;
         end
         else begin
-            if(CHNL_RX_DATA_VALID) begin
-                dna_len <= dna_len - 1;
+            if(CHNL_RX_DATA_VALID && ~recv_fifo_full && (state != STATE_IDLE)) begin
+                if(dna_len > 0)
+                    dna_len <= dna_len - 1;
             end
         end
     end
@@ -128,20 +130,32 @@ always@(posedge clk) begin
     if(rst) begin
         dna_ref_r <= 0;
         dna_r <= 0;
+        recv_fifo_wren <= 1'b0;
     end
     else begin
         if(CHNL_RX_DATA_VALID) begin
             case(state)
+                STATE_IDLE: begin
+                    recv_fifo_wren <= 1'b0;
+                end //STATE_IDLE
+                
                 STATE_FETCH_REF: begin
                     dna_ref_r <= CHNL_RX_DATA;
                 end
                 
                 STATE_PROCESSING: begin
-                    dna_r <= CHNL_RX_DATA;
-                    recv_fifo_wren <= 1'b1;
+                    if(~recv_fifo_full) begin
+                        dna_r <= CHNL_RX_DATA;
+                        recv_fifo_wren <= 1'b1;
+                    end
                 end
             endcase
-        end
+        end // CHNL_RX_DATA_VALID
+         else begin
+             if(~recv_fifo_full) begin
+                 recv_fifo_wren <= 1'b0;
+             end
+         end
     end
 end
 
@@ -199,7 +213,7 @@ pcie_recv_fifo i_recv_fifo(
     .srst(rst),    // input wire srst
     .din({dna_r, dna_ref_r}),      // input wire [255 : 0] din
     .wr_en(recv_fifo_wren),  // input wire wr_en
-    .rd_en(dna_rd_en),  // input wire rd_en
+    .rd_en(dna_rd_en & dna_valid),  // input wire rd_en
     .dout({dna_data, dna_data_ref}),    // output wire [255 : 0] dout
     .full(recv_fifo_full),    // output wire full
     .empty(recv_fifo_empty)  // output wire empty

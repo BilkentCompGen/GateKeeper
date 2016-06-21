@@ -56,7 +56,7 @@ module DNAMapper_top
       parameter C_NUM_LANES =  4,
       // Settings from Vivado IP Generator
       parameter C_PCI_DATA_WIDTH = 128,
-      parameter C_MAX_PAYLOAD_BYTES = 512,
+      parameter C_MAX_PAYLOAD_BYTES = 256,
       parameter C_LOG_NUM_TAGS = 5
       )
     (output [(C_NUM_LANES - 1) : 0] PCI_EXP_TXP,
@@ -196,7 +196,7 @@ module DNAMapper_top
 
     genvar                                     chnl;
 
-    assign cfg_turnoff_ok = 0;
+    /*assign cfg_turnoff_ok = 0;
     assign cfg_trn_pending = 0;
     assign cfg_pm_halt_aspm_l0s = 0;
     assign cfg_pm_halt_aspm_l1 = 0;
@@ -208,7 +208,7 @@ module DNAMapper_top
     assign cfg_interrupt_stat = 0;
     assign cfg_pciecap_interrupt_msgnum = 0;
     assign cfg_turnoff_ok = 0;
-    assign cfg_pm_wake = 0;
+    assign cfg_pm_wake = 0;*/
 
     IBUF 
         #()  

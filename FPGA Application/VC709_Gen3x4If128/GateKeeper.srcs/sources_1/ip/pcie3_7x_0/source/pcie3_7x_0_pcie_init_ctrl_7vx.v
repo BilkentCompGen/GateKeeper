@@ -50,10 +50,10 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pcie_init_ctrl_7vx.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 // Project      : Virtex-7 FPGA Gen3 Integrated Block for PCI Express         //
-// Filename     : pcie3_7x_0_pcie_init_ctrl_7vx.v                                        //
+// Filename     : pcie3_7x_0_pcie_init_ctrl_7vx.v                   //
 // Description  : Initialization Controller for Gen3 Integrated Block for PCI //
 //                Express                                                     //
 //                                                                            //

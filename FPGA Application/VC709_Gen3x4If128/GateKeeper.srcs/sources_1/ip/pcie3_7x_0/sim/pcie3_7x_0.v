@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2015 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2016 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -47,8 +47,8 @@
 // DO NOT MODIFY THIS FILE.
 
 
-// IP VLNV: xilinx.com:ip:pcie3_7x:3.0
-// IP Revision: 3
+// IP VLNV: xilinx.com:ip:pcie3_7x:4.1
+// IP Revision: 1
 
 `timescale 1ns/1ps
 
@@ -182,7 +182,7 @@ output wire [3 : 0] m_axis_rc_tkeep;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rc TVALID" *)
 output wire m_axis_rc_tvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_rc TREADY" *)
-input wire [21 : 0] m_axis_rc_tready;
+input wire m_axis_rc_tready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_cq TDATA" *)
 output wire [127 : 0] m_axis_cq_tdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_cq TUSER" *)
@@ -194,7 +194,7 @@ output wire [3 : 0] m_axis_cq_tkeep;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_cq TVALID" *)
 output wire m_axis_cq_tvalid;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 m_axis_cq TREADY" *)
-input wire [21 : 0] m_axis_cq_tready;
+input wire m_axis_cq_tready;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_cc TDATA" *)
 input wire [127 : 0] s_axis_cc_tdata;
 (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis_cc TUSER" *)
@@ -394,7 +394,7 @@ input wire sys_reset;
     .PF0_EXPANSION_ROM_APERTURE_SIZE('B00000),
     .PF0_EXPANSION_ROM_ENABLE("FALSE"),
     .PF0_INTERRUPT_PIN('H0),
-    .PF0_LINK_STATUS_SLOT_CLOCK_CONFIG("FALSE"),
+    .PF0_LINK_STATUS_SLOT_CLOCK_CONFIG("TRUE"),
     .PF0_LTR_CAP_NEXTPTR('H300),
     .PF0_MSIX_CAP_NEXTPTR('H00),
     .PF0_MSIX_CAP_PBA_BIR(0),
@@ -646,7 +646,9 @@ input wire sys_reset;
     .EXT_STARTUP_PRIMITIVE("FALSE"),
     .EXT_PIPE_INTERFACE("FALSE"),
     .AXISTEN_IF_ENABLE_MSG_ROUTE('H00000),
-    .AXISTEN_IF_ENABLE_RX_MSG_INTFC("FALSE")
+    .AXISTEN_IF_ENABLE_RX_MSG_INTFC("FALSE"),
+    .POWER_DOWN("FALSE"),
+    .DEV_PORT_TYPE('D00)
   ) inst (
     .pci_exp_txn(pci_exp_txn),
     .pci_exp_txp(pci_exp_txp),
@@ -844,6 +846,7 @@ input wire sys_reset;
     .pipe_rxprbscntreset(1'B0),
     .pipe_loopback(3'B0),
     .pipe_rxprbserr(),
+    .pipe_txinhibit(4'B0),
     .pipe_rst_fsm(),
     .pipe_qrst_fsm(),
     .pipe_rate_fsm(),
@@ -931,6 +934,14 @@ input wire sys_reset;
     .pipe_tx_4_sigs(),
     .pipe_tx_5_sigs(),
     .pipe_tx_6_sigs(),
-    .pipe_tx_7_sigs()
+    .pipe_tx_7_sigs(),
+    .cpllpd(4'B0),
+    .txpd(8'B0),
+    .rxpd(8'B0),
+    .txpdelecidlemode(4'B0),
+    .txdetectrx(4'B0),
+    .txelecidle(4'B0),
+    .qpllpd(1'B0),
+    .powerdown(1'B0)
   );
 endmodule

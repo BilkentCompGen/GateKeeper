@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pipe_user.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 //  Filename     :  pcie3_7x_0_pipe_user.v
 //  Description  :  PIPE User Module for 7 Series Transceiver
@@ -197,7 +197,6 @@ begin
         txelecidle_reg1      <= 1'd0;
         txcompliance_reg1    <= 1'd0;
         rxcdrlock_reg1 	     <= 1'd0;
-        rxeq_adapt_done_reg1 <= 1'd0;
         //---------- 2nd Stage FF --------------------------
         pclk_sel_reg2        <= 1'd0;
         resetovrd_start_reg2 <= 1'd0;
@@ -206,7 +205,6 @@ begin
         txelecidle_reg2      <= 1'd0;
         txcompliance_reg2    <= 1'd0;
         rxcdrlock_reg2 	     <= 1'd0;
-        rxeq_adapt_done_reg2 <= 1'd0;
         end
     else
         begin  
@@ -218,7 +216,6 @@ begin
         txelecidle_reg1      <= USER_TXELECIDLE;
         txcompliance_reg1    <= USER_TXCOMPLIANCE;
         rxcdrlock_reg1 	     <= USER_RXCDRLOCK_IN;
-        rxeq_adapt_done_reg1 <= USER_RXEQ_ADAPT_DONE;
         //---------- 2nd Stage FF --------------------------
         pclk_sel_reg2        <= pclk_sel_reg1;
         resetovrd_start_reg2 <= resetovrd_start_reg1;
@@ -227,7 +224,6 @@ begin
         txelecidle_reg2      <= txelecidle_reg1;       
         txcompliance_reg2    <= txcompliance_reg1;  
         rxcdrlock_reg2 	     <= rxcdrlock_reg1;  
-        rxeq_adapt_done_reg2 <= rxeq_adapt_done_reg1;
         end
         
 end 
@@ -248,6 +244,7 @@ begin
         rate_rxsync_reg1 <= 1'd0;
         rate_idle_reg1   <= 1'd0;
         rate_gen3_reg1   <= 1'd0;
+        rxeq_adapt_done_reg1 <= 1'd0;
         //---------- 2nd Stage FF --------------------------
         rxvalid_reg2     <= 1'd0;
         rxstatus_reg2    <= 1'd0;
@@ -256,6 +253,7 @@ begin
         rate_rxsync_reg2 <= 1'd0;
         rate_idle_reg2   <= 1'd0;
         rate_gen3_reg2   <= 1'd0;
+        rxeq_adapt_done_reg2 <= 1'd0;
         end
     else
         begin  
@@ -267,6 +265,7 @@ begin
         rate_rxsync_reg1 <= USER_RATE_RXSYNC;
         rate_idle_reg1   <= USER_RATE_IDLE;
         rate_gen3_reg1   <= USER_RATE_GEN3;
+        rxeq_adapt_done_reg1 <= USER_RXEQ_ADAPT_DONE;
         //---------- 2nd Stage FF --------------------------  	   
         rxvalid_reg2     <= rxvalid_reg1;            
         rxstatus_reg2    <= rxstatus_reg1; 
@@ -275,6 +274,7 @@ begin
         rate_rxsync_reg2 <= rate_rxsync_reg1;
         rate_idle_reg2   <= rate_idle_reg1;
         rate_gen3_reg2   <= rate_gen3_reg1;      
+        rxeq_adapt_done_reg2 <= rxeq_adapt_done_reg1;       
         end
         
 end 
@@ -498,10 +498,10 @@ end
 
 
 //---------- Converge Counter --------------------------------------------------
-always @ (posedge USER_TXUSRCLK)
+always @ (posedge USER_RXUSRCLK)
 begin
 
-    if (!USER_RST_N)
+    if (!USER_RXUSRCLK_RST_N)
         converge_cnt <= 22'd0;
     else
     
@@ -527,10 +527,10 @@ end
 
 
 //---------- Converge ----------------------------------------------------------
-always @ (posedge USER_TXUSRCLK)
+always @ (posedge USER_RXUSRCLK)
 begin
 
-    if (!USER_RST_N)
+    if (!USER_RXUSRCLK_RST_N)
         converge_gen3 <= 1'd0;
     else
     

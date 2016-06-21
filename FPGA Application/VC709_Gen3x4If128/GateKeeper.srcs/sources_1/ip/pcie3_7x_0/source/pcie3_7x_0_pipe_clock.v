@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pipe_clock.v
-// Version    : 3.0
+// Version    : 4.1
 
 //----------------------------------------------------------------------------//
 //  Filename     :  pcie3_7x_0_pipe_clock.v
@@ -92,7 +92,7 @@ module pcie3_7x_0_pipe_clock #
     
     //---------- Output ------------------------------------
     output                      CLK_PCLK,
-output                          CLK_PCLK_SLAVE,
+    output                      CLK_PCLK_SLAVE,
     output                      CLK_RXUSRCLK,
     output      [PCIE_LANE-1:0] CLK_RXOUTCLK_OUT,
     output                      CLK_DCLK,
@@ -150,7 +150,7 @@ output                          CLK_PCLK_SLAVE,
     wire                        userclk1;
     wire                        userclk2;
     wire                        oobclk;
-    reg                         pclk_sel = 1'd0;
+    reg   pclk_sel = 1'd0;
     reg                         pclk_sel_slave = 1'd0;
 
     //---------- Output Registers --------------------------
@@ -406,7 +406,7 @@ endgenerate
 
 
 //---------- Generate RXOUTCLK Buffer for Debug --------------------------------
-generate if ((PCIE_DEBUG_MODE == 1) || (PCIE_ASYNC_EN == "TRUE"))
+generate if (PCIE_DEBUG_MODE == 1)
         
     begin : rxoutclk_per_lane
     //---------- Generate per Lane -------------------------
@@ -435,23 +435,44 @@ else
 endgenerate 
 
 
-//---------- Generate DCLK Buffer ----------------------------------------------
-generate if (PCIE_USERCLK2_FREQ <= 3)
-    //---------- Disable DCLK Buffer -----------------------
-    begin : dclk_i
-    assign CLK_DCLK = userclk2_1;                       // always less than 125Mhz
-    end
-else
+////---------- Generate DCLK Buffer ----------------------------------------------
+//generate if (PCIE_USERCLK2_FREQ <= 3)
+////---------- Disable DCLK Buffer -----------------------
+//    begin : dclk_i
+//    assign CLK_DCLK = userclk2_1;                       // always less than 125Mhz
+//    end
+//else
+//    begin : dclk_i_bufg
+////---------- DCLK Buffer -------------------------------
+// BUFG dclk_i
+// (
+////---------- Input ---------------------------------
+// .I                          (clk_125mhz), 
+////---------- Output --------------------------------
+// .O                          (CLK_DCLK)
+// );
+// end 
+// endgenerate
+generate if (PCIE_LINK_SPEED != 1)
+
     begin : dclk_i_bufg
     //---------- DCLK Buffer -------------------------------
     BUFG dclk_i
     (
         //---------- Input ---------------------------------
-        .I                          (clk_125mhz), 
+        .I                          (clk_125mhz),
         //---------- Output --------------------------------
         .O                          (CLK_DCLK)
     );
-    end 
+    end
+
+else
+
+    //---------- Disable DCLK Buffer -----------------------
+    begin : dclk_i
+    assign CLK_DCLK = clk_125mhz_buf;                       // always 125 MHz in Gen1
+    end
+
 endgenerate
 
 
@@ -528,12 +549,99 @@ else
 endgenerate 
 
 
-// Disabled Second Stage Buffers
+
+//---------- Generate 2nd Stage Buffers ----------------------------------------
+generate if ((PCIE_LINK_SPEED == 3) && (PCIE_ASYNC_EN == "TRUE")) 
+
+    begin : second_stage_buf
+
+    //---------- PCLK Buffer ---------------------------------------------------
+    (* dont_touch = "true" *) 
+    BUFG pclk_i2
+    (
+        //---------- Input -------------------------------------
+        .I                          (pclk_1),  
+        //---------- Output ------------------------------------
+        .O                          (pclk)
+    );
+
+
+
+    //---------- RXUSRCLK Mux --------------------------------------------------
+    BUFGCTRL rxusrclk_i2
+    (
+        //---------- Input ---------------------------------
+        .CE0                        (1'b1),              
+        .CE1                        (1'b1),              
+        .I0                         (pclk_1),            
+        .I1                         (CLK_RXOUTCLK_IN[0]),   
+        .IGNORE0                    (1'b0),               
+        .IGNORE1                    (1'b0),               
+        .S0                         (~gen3_reg2),        
+        .S1                         ( gen3_reg2),           
+        //---------- Output --------------------------------
+        .O                          (CLK_RXUSRCLK)
+    );
+
+
+
+    //---------- Generate USERCLK1 Buffer --------------------------------------
+    if (PCIE_USERCLK1_FREQ != 0) 
+    
+        begin : userclk1_i2
+        //---------- USERCLK1 Buffer -----------------------
+        BUFG usrclk1_i2
+        (
+            //---------- Input -----------------------------
+            .I                          (userclk1_1),
+            //---------- Output ----------------------------
+            .O                          (CLK_USERCLK1)
+        );
+        end
+        
+    else 
+    
+        //---------- Disable USERCLK1 Buffer ---------------
+        begin : userclk1_i2_disable
+        assign CLK_USERCLK1 = userclk1_1;
+        end
+    
+    
+
+    //---------- Generate USERCLK2 Buffer --------------------------------------
+    if (PCIE_USERCLK2_FREQ != 0) 
+    
+        begin : userclk2_i2
+        //---------- USERCLK2 Buffer -----------------------
+        BUFG usrclk2_i2
+        (
+            //---------- Input -----------------------------
+            .I                          (userclk2_1),
+            //---------- Output ----------------------------
+            .O                          (CLK_USERCLK2)
+        );
+        end
+        
+    else 
+  
+        //---------- Disable USERCLK2 Buffer ---------------
+        begin : userclk2_i2_disable
+        assign CLK_USERCLK2 = userclk2_1;
+        end
+    
+    end  
+              
+else 
+
+    //---------- Disable 2nd Stage Buffer --------------------------------------
+    begin : second_stage_buf_disable 
     assign pclk         = pclk_1;
     assign CLK_RXUSRCLK = pclk_1;
     assign CLK_USERCLK1 = userclk1_1;
     assign CLK_USERCLK2 = userclk2_1;
- 
+    end 
+
+endgenerate 
 
 
 

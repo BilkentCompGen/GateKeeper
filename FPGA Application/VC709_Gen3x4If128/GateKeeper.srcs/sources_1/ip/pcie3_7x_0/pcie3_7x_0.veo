@@ -1,4 +1,4 @@
-// (c) Copyright 1995-2015 Xilinx, Inc. All rights reserved.
+// (c) Copyright 1995-2016 Xilinx, Inc. All rights reserved.
 // 
 // This file contains confidential and proprietary information
 // of Xilinx, Inc. and is protected under U.S. and
@@ -46,8 +46,8 @@
 // 
 // DO NOT MODIFY THIS FILE.
 
-// IP VLNV: xilinx.com:ip:pcie3_7x:3.0
-// IP Revision: 3
+// IP VLNV: xilinx.com:ip:pcie3_7x:4.1
+// IP Revision: 1
 
 // The following must be inserted into your Verilog file for this
 // core to be instantiated. Change the instance name and port connections
@@ -74,13 +74,13 @@ pcie3_7x_0 your_instance_name (
   .m_axis_rc_tlast(m_axis_rc_tlast),                                      // output wire m_axis_rc_tlast
   .m_axis_rc_tkeep(m_axis_rc_tkeep),                                      // output wire [3 : 0] m_axis_rc_tkeep
   .m_axis_rc_tvalid(m_axis_rc_tvalid),                                    // output wire m_axis_rc_tvalid
-  .m_axis_rc_tready(m_axis_rc_tready),                                    // input wire [21 : 0] m_axis_rc_tready
+  .m_axis_rc_tready(m_axis_rc_tready),                                    // input wire m_axis_rc_tready
   .m_axis_cq_tdata(m_axis_cq_tdata),                                      // output wire [127 : 0] m_axis_cq_tdata
   .m_axis_cq_tuser(m_axis_cq_tuser),                                      // output wire [84 : 0] m_axis_cq_tuser
   .m_axis_cq_tlast(m_axis_cq_tlast),                                      // output wire m_axis_cq_tlast
   .m_axis_cq_tkeep(m_axis_cq_tkeep),                                      // output wire [3 : 0] m_axis_cq_tkeep
   .m_axis_cq_tvalid(m_axis_cq_tvalid),                                    // output wire m_axis_cq_tvalid
-  .m_axis_cq_tready(m_axis_cq_tready),                                    // input wire [21 : 0] m_axis_cq_tready
+  .m_axis_cq_tready(m_axis_cq_tready),                                    // input wire m_axis_cq_tready
   .s_axis_cc_tdata(s_axis_cc_tdata),                                      // input wire [127 : 0] s_axis_cc_tdata
   .s_axis_cc_tuser(s_axis_cc_tuser),                                      // input wire [32 : 0] s_axis_cc_tuser
   .s_axis_cc_tlast(s_axis_cc_tlast),                                      // input wire s_axis_cc_tlast

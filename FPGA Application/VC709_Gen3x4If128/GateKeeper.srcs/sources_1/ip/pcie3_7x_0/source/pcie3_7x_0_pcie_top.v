@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pcie_top.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 // Project      : Virtex-7 FPGA Gen3 Integrated Block for PCI Express         //
 // Filename     : pcie3_7x_0_pcie_top.v                                                  //
@@ -2318,6 +2318,7 @@ module pcie3_7x_0_pcie_top #(
   pcie3_7x_0_pcie_force_adapt force_adapt_i(
   .pipe_clk(pipe_clk),
   .user_clk(user_clk),
+  .rx_clk(rec_clk),
   .cfg_ltssm_state(cfg_ltssm_state),  
   .cfg_current_speed(cfg_current_speed),
   .pipe_tx0_rate(pipe_tx_rate),

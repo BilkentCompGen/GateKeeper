@@ -28,7 +28,7 @@ module pcie_data_sender #(parameter C_PCI_DATA_WIDTH = 128, INPUT_DATA_WIDTH = 8
         //Collector Interface
         output coll_ready,
         input coll_data_valid,
-        input[7:0] coll_data,
+        input[INPUT_DATA_WIDTH - 1:0] coll_data,
         
         //RIFFA TX Interface
         output CHNL_TX, 
@@ -67,8 +67,8 @@ module pcie_data_sender #(parameter C_PCI_DATA_WIDTH = 128, INPUT_DATA_WIDTH = 8
             case(state)
                 STATE_IDLE: begin
                     if(en) begin
-                        dna_len_r <= (dna_len - 1) >> 4;
-                        send_len <= (dna_len - 1) >> 2;
+                        dna_len_r <= (dna_len - 1) >> IT_BITS;
+                        send_len <= (dna_len - 1) >> (IT_BITS - 2);
                         state <= STATE_SENDING;
                     end
                 end //STATE_IDLE

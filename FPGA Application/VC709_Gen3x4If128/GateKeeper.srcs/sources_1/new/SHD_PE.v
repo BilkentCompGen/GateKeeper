@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module SHD_PE #(parameter DNA_DATA_WIDTH = 128) (
+module SHD_PE #(parameter DNA_DATA_WIDTH = 128, NUM = 0) (
         input clk,
         input rst,
         
@@ -41,6 +41,7 @@ module SHD_PE #(parameter DNA_DATA_WIDTH = 128) (
     //Register Input
     reg[DNA_DATA_WIDTH - 1:0] dna_r, dna_ref_r;
     reg dna_valid_r;
+    wire pe_fifo_full, pe_fifo_empty;
     
     always@(posedge clk) begin
         if(rst) begin
@@ -49,7 +50,7 @@ module SHD_PE #(parameter DNA_DATA_WIDTH = 128) (
             dna_ref_r <= 0;
         end
         else begin
-            if(~dna_valid_r || ~pe_fifo_full) begin
+            if(/*~dna_valid_r ||*/ ~pe_fifo_full) begin
                 dna_valid_r <= dna_valid_in;
                 dna_r <= dna_in;
                 dna_ref_r <= dna_ref_in;
@@ -64,15 +65,13 @@ module SHD_PE #(parameter DNA_DATA_WIDTH = 128) (
         .DNA_MinErrors(dna_err)
     );
     
-    wire pe_fifo_full, pe_fifo_empty;
-    
     shd_pe_fifo i_pe_fifo (
       .wr_clk(clk),      // input wire wr_clk
       .rd_clk(coll_clk),
       .rst(rst),    // input wire srst
       .din(dna_err),      // input wire [7 : 0] din
       .wr_en(~pe_fifo_full && dna_valid_r),  // input wire wr_en
-      .rd_en(coll_rd_en),  // input wire rd_en
+      .rd_en(coll_rd_en & coll_valid),  // input wire rd_en
       .dout(coll_dna_err),    // output wire [7 : 0] dout
       .full(pe_fifo_full),    // output wire full
       .empty(pe_fifo_empty)  // output wire empty

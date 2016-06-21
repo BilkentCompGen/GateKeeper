@@ -29,7 +29,7 @@ module SHD_top_tb();
     
     wire CHNL_RX_CLK, CHNL_RX_ACK, CHNL_RX_DATA_REN;
     reg CHNL_RX = 1'b1, CHNL_RX_LAST = 1'b1, CHNL_RX_VALID = 1'b1;
-    reg[31:0] CHNL_RX_LEN = 260;
+    reg[31:0] CHNL_RX_LEN = 2048;
     reg[30:0] CHNL_RX_OFF = 0;
     wire[C_PCI_DATA_WIDTH - 1:0] CHNL_RX_DATA;
     
@@ -83,11 +83,17 @@ module SHD_top_tb();
         shd_clk = ~shd_clk;
     end
     
-    reg[1:0] data_state = 0;
-    wire[91:0] data[0:3] = {92'b11110101010010010001001000011001001100100101111010110111111110110110110101001111100001001111,
-                          92'b11110101010010010001000010000100010011111011101111111101111011100101100001010100101000010011,
-                          92'b11010100111110000100111101101110000111011101011111011101110101010001010101111111100101010101,
-                          92'b11110101010010010001000010000100010011111011101111111101111011100101100001010100101000010011 };
+    reg[31:0] data_state = 0;
+    //wire[91:0] data[0:3] = {92'b11110101010010010001001000011001001100100101111010110111111110110110110101001111100001001111,
+    //                      92'b11110101010010010001000010000100010011111011101111111101111011100101100001010100101000010011,
+    //                      92'b11010100111110000100111101101110000111011101011111011101110101010001010101111111100101010101,
+    //                      92'b11110101010010010001000010000100010011111011101111111101111011100101100001010100101000010011 };
+    
+    wire[127:0] data[0:4] = {128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'h0000000_0000000_0000000_0000000,
+                          128'h0000000_0000000_0000000_0000000,
+                          128'h0000000_0000000_0000000_0000000, 
+                          128'h0000000_0000000_0000000_0000000};
     
     reg[31:0] data_sent = 0;
     //Data Sender : always send data and increment the data value when sent
@@ -104,8 +110,13 @@ module SHD_top_tb();
         end
     end
     
-    assign CHNL_RX_DATA[91:0] = data[data_state];
-    assign CHNL_RX_DATA[127:92] = 0;
+    //assign CHNL_RX_DATA[91:0] = data[data_state];
+    //assign CHNL_RX_DATA[127:92] = 0;
+    assign CHNL_RX_DATA = data[data_state%5];
+    /*assign CHNL_RX_DATA[31:0] = data_sent*4;
+    assign CHNL_RX_DATA[63:32] = data_sent*4 + 1;
+    assign CHNL_RX_DATA[95:64] = data_sent*4 + 2;
+    assign CHNL_RX_DATA[127:96] = data_sent*4 + 3;*/
     
     reg[31:0] recv_counter = 0;
     

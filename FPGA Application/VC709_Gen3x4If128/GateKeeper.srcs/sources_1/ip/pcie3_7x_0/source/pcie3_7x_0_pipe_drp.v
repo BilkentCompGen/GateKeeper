@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pipe_drp.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 //  Filename     :  pcie3_7x_0_pipe_drp.v
 //  Description  :  PIPE DRP Module for 7 Series Transceiver

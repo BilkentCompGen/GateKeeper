@@ -1,3 +1,24 @@
+Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2015.4 (lin64) Build 1412921 Wed Nov 18 09:44:32 MST 2015
+| Date         : Tue Jun 21 04:32:08 2016
+| Host         : jalapeno running 64-bit unknown
+| Command      : upgrade_ip
+| Device       : xc7vx690tffg1761-2
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'clk_gen'
+
+1. Summary
+----------
+
+SUCCESS in the upgrade of clk_gen from xilinx.com:ip:clk_wiz:5.1 (Rev. 4) to xilinx.com:ip:clk_wiz:5.2 (Rev. 1)
+
+
+
+
+
+
 Copyright 1986-2014 Xilinx, Inc. All Rights Reserved.
 ------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2014.3 (lin64) Build 1034051 Fri Oct  3 16:31:15 MDT 2014

@@ -50,7 +50,7 @@
 ##
 ## Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 ## File       : pcie3_7x_0_ooc.xdc
-## Version    : 3.0
+## Version    : 4.1
 #
 # This constraints file contains default clock frequencies to be used during out-of-context flows such as
 # OOC Synthesis and Hierarchical Designs. For best results the frequencies should be modified

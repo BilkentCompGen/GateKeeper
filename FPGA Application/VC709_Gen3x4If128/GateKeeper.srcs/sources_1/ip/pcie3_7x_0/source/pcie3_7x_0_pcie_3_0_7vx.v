@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_pcie_3_0_7vx.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 // Project      : Virtex-7 FPGA Gen3 Integrated Block for PCI Express         //
 // Filename     : <CoreName>_pcie_3_0_7vx.v                                   //
@@ -115,7 +115,7 @@
 
 module pcie3_7x_0_pcie_3_0_7vx # (
   parameter integer TCQ = 100,
-  parameter         component_name = "pcie3_7x_v3_0",
+  parameter         component_name = "pcie3_7x_v4_1_1",
   // The following parameters can be changed to configure the link to a different width/speed.
   // See Product Guide for details: Table "Data Width and Clock Frequency Settings for the Client Interfaces"
   parameter  [2:0]  PL_LINK_CAP_MAX_LINK_SPEED = 3'h4, // Maximum Link Speed
@@ -125,7 +125,7 @@ module pcie3_7x_0_pcie_3_0_7vx # (
   parameter integer PIPE_PIPELINE_STAGES = 0,          // PIPE Interface pipeline: 0-None, 1- single pipeline, 2-double pipeline
   parameter         PIPE_SIM = "FALSE",                // No effect in RTL using this parameter.  
   parameter         PIPE_SIM_MODE = "FALSE",           // Use this paramter to control PIPE mode simulation logic; in-side this module    
-
+  parameter         EXT_PIPE_SIM = "FALSE",
   //GT Parameters
   parameter         REF_CLK_FREQ = 0,                  // Reference Clock Frequency
   parameter         PCIE_EXT_CLK = "TRUE",
@@ -608,7 +608,10 @@ module pcie3_7x_0_pcie_3_0_7vx # (
   parameter         CFG_TX_MSG_IF = "FALSE",
   parameter         CFG_CTL_IF = "FALSE",
   parameter         EXT_STARTUP_PRIMITIVE = "FALSE",
-  parameter         EXT_PIPE_INTERFACE = "FALSE"
+  parameter         EXT_PIPE_INTERFACE = "FALSE",
+  parameter         POWER_DOWN = "FALSE",
+  parameter         PCIE_ASYNC_EN = "FALSE",
+  parameter         DEV_PORT_TYPE = 0
 
 )  (
 
@@ -694,14 +697,14 @@ module pcie3_7x_0_pcie_3_0_7vx # (
   output                                     m_axis_rc_tlast,
   output  [KEEP_WIDTH-1:0]                   m_axis_rc_tkeep,
   output                                     m_axis_rc_tvalid,
-  input   [21:0]                             m_axis_rc_tready,
+  input                                      m_axis_rc_tready,
 
   output  [C_DATA_WIDTH-1:0]                 m_axis_cq_tdata,
   output  [84:0]                             m_axis_cq_tuser,
   output                                     m_axis_cq_tlast,
   output  [KEEP_WIDTH-1:0]                   m_axis_cq_tkeep,
   output                                     m_axis_cq_tvalid,
-  input   [21:0]                             m_axis_cq_tready,
+  input                                      m_axis_cq_tready,
 
   input  [C_DATA_WIDTH-1:0]                  s_axis_cc_tdata,
   input  [32:0]                              s_axis_cc_tuser,
@@ -887,6 +890,7 @@ module pcie3_7x_0_pcie_3_0_7vx # (
   input   [ 2:0]                               pipe_loopback,     
 
   output  [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]     pipe_rxprbserr,   
+  input  [PL_LINK_CAP_MAX_LINK_WIDTH-1:0]      pipe_txinhibit,   
 
 
   output  [4:0]                                pipe_rst_fsm,         
@@ -997,7 +1001,17 @@ module pcie3_7x_0_pcie_3_0_7vx # (
   input                                       startup_usrcclko,   // 1-bit input: User CCLK input
   input                                       startup_usrcclkts,  // 1-bit input: User CCLK 3-state enable input
   input                                       startup_usrdoneo,   // 1-bit input: User DONE pin output control
-  input                                       startup_usrdonets   // 1-bit input: User DONE 3-state enable output
+  input                                       startup_usrdonets,  // 1-bit input: User DONE 3-state enable output
+
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    cpllpd, 
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH*2)-1:0]  txpd,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH*2)-1:0]  rxpd,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    txpdelecidlemode,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    txdetectrx,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH)-1:0]    txelecidle,
+  input [(PL_LINK_CAP_MAX_LINK_WIDTH-1)>>2:0] qpllpd, 
+  input                                       powerdown
+
 );
 
 
@@ -1446,7 +1460,6 @@ module pcie3_7x_0_pcie_3_0_7vx # (
      assign   pipe_rxeq_user_txcoeff =  {8{6'd00,6'd30,6'd10}} ;
   end
   endgenerate
-
   //------------------------------------------------------------------------------------------------------------------//
   // Convert incoming reset from AXI required active High                                                             //
   // to active low as that is what is required by GT and PCIe Block                                                   //
@@ -2423,6 +2436,7 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     .REF_CLK_FREQ                                         ( REF_CLK_FREQ ),
     .USER_CLK2_FREQ                                       ( USER_CLK2_FREQ ),
     .USER_CLK_FREQ                                        ( USER_CLK_FREQ ),
+    .PCIE_ASYNC_EN                                        ( PCIE_ASYNC_EN ),
     // synthesis translate_off
     .PL_SIM_FAST_LINK_TRAINING                            ( ENABLE_FAST_SIM_TRAINING ),
     // synthesis translate_on
@@ -2730,25 +2744,24 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     .INT_QPLLOUTREFCLK_OUT                             ( int_qplloutrefclk_out ),
     .INT_PCLK_SEL_SLAVE                                ( int_pclk_sel_slave ),
 
-
     // ---------- Shared Logic External------------------
 
     //External GT COMMON Ports
 
-   .qpll_drp_crscode                                     ( qpll_drp_crscode ),
-   .qpll_drp_fsm                                         ( qpll_drp_fsm ),
-   .qpll_drp_done                                        ( qpll_drp_done ),
-   .qpll_drp_reset                                       ( qpll_drp_reset ),
-   .qpll_qplllock                                        ( qpll_qplllock ),
-   .qpll_qplloutclk                                      ( qpll_qplloutclk ),
-   .qpll_qplloutrefclk                                   ( qpll_qplloutrefclk ),
-   .qpll_qplld                                           ( qpll_qplld ),
-   .qpll_qpllreset                                       ( qpll_qpllreset ),
-   .qpll_drp_clk                                         ( qpll_drp_clk ),
-   .qpll_drp_rst_n                                       ( qpll_drp_rst_n ),
-   .qpll_drp_ovrd                                        ( qpll_drp_ovrd ),
-   .qpll_drp_gen3                                        ( qpll_drp_gen3),
-   .qpll_drp_start                                       ( qpll_drp_start ),
+    .qpll_drp_crscode                                     ( qpll_drp_crscode ),
+    .qpll_drp_fsm                                         ( qpll_drp_fsm ),
+    .qpll_drp_done                                        ( qpll_drp_done ),
+    .qpll_drp_reset                                       ( qpll_drp_reset ),
+    .qpll_qplllock                                        ( qpll_qplllock ),
+    .qpll_qplloutclk                                      ( qpll_qplloutclk ),
+    .qpll_qplloutrefclk                                   ( qpll_qplloutrefclk ),
+    .qpll_qplld                                           ( qpll_qplld ),
+    .qpll_qpllreset                                       ( qpll_qpllreset ),
+    .qpll_drp_clk                                         ( qpll_drp_clk ),
+    .qpll_drp_rst_n                                       ( qpll_drp_rst_n ),
+    .qpll_drp_ovrd                                        ( qpll_drp_ovrd ),
+    .qpll_drp_gen3                                        ( qpll_drp_gen3),
+    .qpll_drp_start                                       ( qpll_drp_start ),
 
     //External Clock Ports 
     .PIPE_PCLK_IN                                       ( pipe_pclk_in ),
@@ -2765,16 +2778,15 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     .PIPE_GEN3_OUT                                      ( PIPE_GEN3_OUT_wire ),
 
     //----------TRANSCEIVER DEBUG EOU------------------
-   .ext_ch_gt_drpclk                                     (ext_ch_gt_drpclk),
-   .ext_ch_gt_drpaddr                                    (ext_ch_gt_drpaddr),
-   .ext_ch_gt_drpen                                      (ext_ch_gt_drpen),
-   .ext_ch_gt_drpdi                                      (ext_ch_gt_drpdi),
-   .ext_ch_gt_drpwe                                      (ext_ch_gt_drpwe),
-   .ext_ch_gt_drpdo                                      (ext_ch_gt_drpdo),
-   .ext_ch_gt_drprdy                                     (ext_ch_gt_drprdy),
-
-
-  //---------- PRBS/Loopback Ports -----------------------
+    .ext_ch_gt_drpclk                                     (ext_ch_gt_drpclk),
+    .ext_ch_gt_drpaddr                                    (ext_ch_gt_drpaddr),
+    .ext_ch_gt_drpen                                      (ext_ch_gt_drpen),
+    .ext_ch_gt_drpdi                                      (ext_ch_gt_drpdi),
+    .ext_ch_gt_drpwe                                      (ext_ch_gt_drpwe),
+    .ext_ch_gt_drpdo                                      (ext_ch_gt_drpdo),
+    .ext_ch_gt_drprdy                                     (ext_ch_gt_drprdy),
+ 
+    //---------- PRBS/Loopback Ports -----------------------
     .PIPE_TXPRBSSEL                                      ( pipe_txprbssel ),
     .PIPE_RXPRBSSEL                                      ( pipe_rxprbssel ),
     .PIPE_TXPRBSFORCEERR                                 ( pipe_txprbsforceerr ),
@@ -2782,7 +2794,8 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     .PIPE_LOOPBACK                                       ( pipe_loopback),
 
     .PIPE_RXPRBSERR                                      ( pipe_rxprbserr),
-
+    .PIPE_TXINHIBIT                                      ( pipe_txinhibit),
+    .PIPE_PCSRSVDIN                                      ( {PL_LINK_CAP_MAX_LINK_WIDTH{16'b0}} ),
 
  //---------- Transceiver Debug FSM Ports ---------------------------------
     .PIPE_RST_FSM             (pipe_rst_fsm),
@@ -2826,8 +2839,16 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     .PIPE_DEBUG_7             (pipe_debug_7  ),
     .PIPE_DEBUG_8             (pipe_debug_8 ),
     .PIPE_DEBUG_9             (pipe_debug_9  ),
-    .PIPE_DEBUG               (pipe_debug)
+    .PIPE_DEBUG               (pipe_debug),
 
+    .CPLLPD                   (cpllpd),
+    .TXPD                     (txpd),
+    .RXPD                     (rxpd),
+    .TXPDELECIDLEMODE         (txpdelecidlemode),
+    .TXDETECTRX               (txdetectrx),
+    .TXELECIDLE               (txelecidle),
+    .QPLLPD                   (qpllpd),
+    .POWERDOWN                (powerdown)
 );
      assign pipe_gen3_out = 1'b0;
     assign common_commands_out = 17'b0;
@@ -2899,7 +2920,7 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     assign m_axis_cq_tvalid = m_axis_cq_tvalid_wire;
     assign m_axis_cq_tuser = m_axis_cq_tuser_wire;
     assign m_axis_cq_tkeep = m_axis_cq_tkeep_wire;
-    assign m_axis_cq_tready_wire = m_axis_cq_tready;
+    assign m_axis_cq_tready_wire = {22{m_axis_cq_tready}};
 
     assign s_axis_rq_tdata_wire = s_axis_rq_tdata;
     assign s_axis_rq_tkeep_wire = s_axis_rq_tkeep;
@@ -2913,7 +2934,7 @@ module pcie3_7x_0_pcie_3_0_7vx # (
     assign m_axis_rc_tvalid = m_axis_rc_tvalid_wire;
     assign m_axis_rc_tuser = m_axis_rc_tuser_wire;
     assign m_axis_rc_tkeep = m_axis_rc_tkeep_wire;
-    assign m_axis_rc_tready_wire = m_axis_rc_tready;
+    assign m_axis_rc_tready_wire = {22{m_axis_rc_tready}};
 
     assign cfg_msg_transmit_done = cfg_msg_transmit_done_wire;
     assign cfg_msg_transmit_wire = cfg_msg_transmit;

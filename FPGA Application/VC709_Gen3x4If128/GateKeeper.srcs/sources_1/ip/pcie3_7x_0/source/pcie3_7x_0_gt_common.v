@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_gt_common.v
-// Version    : 3.0
+// Version    : 4.1
 
 `timescale 1ns / 1ps
 

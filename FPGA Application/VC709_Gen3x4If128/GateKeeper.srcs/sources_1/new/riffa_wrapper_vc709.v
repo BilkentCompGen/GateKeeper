@@ -51,7 +51,8 @@ module riffa_wrapper_vc709
       parameter C_PCI_DATA_WIDTH = 128,
       // 4-Byte Name for this FPGA
       parameter C_MAX_PAYLOAD_BYTES = 256,
-      parameter C_LOG_NUM_TAGS = 5
+      parameter C_LOG_NUM_TAGS = 5,
+      parameter C_FPGA_ID = "V709"
       ) 
     (
      //Interface: CQ Ultrascale (RXR)
@@ -152,9 +153,15 @@ module riffa_wrapper_vc709
     localparam C_KEEP_WIDTH = C_PCI_DATA_WIDTH / 32;
     localparam C_PIPELINE_OUTPUT = 1;
     localparam C_PIPELINE_INPUT = 1;
+    localparam C_DEPTH_PACKETS = 4;
 
     wire                                          clk;
     wire                                          rst_in;
+    
+    wire                                          done_txc_rst;
+    wire                                          done_txr_rst;
+    wire                                          done_rxr_rst;
+    wire                                          done_rxc_rst;
 
     // Interface: RXC Engine
     wire [C_PCI_DATA_WIDTH-1:0]                   rxc_data;
@@ -361,6 +368,7 @@ module riffa_wrapper_vc709
          .TXR_DATA_READY                (txr_data_ready),
          .TXR_META_READY                (txr_meta_ready),
          .TXR_SENT                      (txr_sent),
+         .RST_LOGIC                     (RST_OUT),
          // Unconnected Outputs
          .TX_TLP                        (wTxTlp_nc),
          .TX_TLP_VALID                  (wTxTlpValid_nc),
@@ -371,8 +379,8 @@ module riffa_wrapper_vc709
 
          .RX_TLP_READY                  (wRxTlpReady_nc),
          // Inputs
-         .CLK                           (clk),
-         .RST_IN                        (rst_in),
+         .CLK_BUS                            (clk),
+         .RST_BUS                        (rst_in),
 
          .CONFIG_COMPLETER_ID           (config_completer_id[`SIG_CPLID_W-1:0]),
 
@@ -421,6 +429,10 @@ module riffa_wrapper_vc709
          .RX_TLP_BAR_DECODE             (wRxTlpBarDecode_nc),
 
          .TX_TLP_READY                  (wTxTlpReady_nc),
+         .DONE_TXC_RST                  (done_txc_rst),
+         .DONE_TXR_RST                  (done_txr_rst),
+         .DONE_RXR_RST                  (done_rxc_rst),
+         .DONE_RXC_RST                  (done_rxr_rstsudo),
          /*AUTOINST*/
          // Outputs
          .M_AXIS_CQ_TREADY              (M_AXIS_CQ_TREADY),
@@ -457,7 +469,9 @@ module riffa_wrapper_vc709
           .C_NUM_CHNL                   (C_NUM_CHNL),
           .C_MAX_READ_REQ_BYTES         (C_MAX_READ_REQ_BYTES),
           .C_VENDOR                     (C_VENDOR),
-          .C_FPGA_NAME                  (C_FPGA_NAME))
+          .C_FPGA_NAME                  (C_FPGA_NAME),
+          .C_FPGA_ID                    (C_FPGA_ID),
+          .C_DEPTH_PACKETS              (C_DEPTH_PACKETS))
     riffa_inst
         (// Outputs
          .TXC_DATA                      (txc_data[C_PCI_DATA_WIDTH-1:0]),
@@ -499,7 +513,6 @@ module riffa_wrapper_vc709
          .INTR_MSI_REQUEST              (intr_msi_request),
          // Inputs
          .CLK                           (clk),
-         .RST_IN                        (rst_in),
          .RXR_DATA                      (rxr_data[C_PCI_DATA_WIDTH-1:0]),
          .RXR_DATA_VALID                (rxr_data_valid),
          .RXR_DATA_START_FLAG           (rxr_data_start_flag),
@@ -556,6 +569,9 @@ module riffa_wrapper_vc709
          .CONFIG_MAX_CPL_HDR            (config_max_cpl_hdr[`SIG_FC_CPLH_W-1:0]),
         
          .INTR_MSI_RDY                  (intr_msi_rdy),
+         .DONE_TXC_RST                  (done_txc_rst),
+         .DONE_TXR_RST                  (done_txr_rst),
+         .RST_BUS                       (rst_in),
 
          /*AUTOINST*/
          // Outputs

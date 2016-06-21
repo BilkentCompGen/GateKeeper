@@ -97,6 +97,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_2= DNA_ref ^ (DNA_read<<2);            //shift for 2bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shl_one = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_2[i] || DNA_2[i+1])
@@ -142,6 +143,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_3= DNA_ref ^ (DNA_read<<4);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shl_two = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_3[i] || DNA_3[i+1])
@@ -187,6 +189,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_6= DNA_ref ^ (DNA_read<<6);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shl_three = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                   if(DNA_6[i] || DNA_6[i+1])
@@ -233,6 +236,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_7= DNA_ref ^ (DNA_read<<8);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shl_four = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                   if(DNA_7[i] || DNA_7[i+1])
@@ -279,6 +283,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_8= DNA_ref ^ (DNA_read<<10);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shl_five = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                   if(DNA_8[i] || DNA_8[i+1])
@@ -325,6 +330,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_4= DNA_ref ^ (DNA_read>>2);            //shift for 2bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shr_one = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_4[i] || DNA_4[i+1])
@@ -370,6 +376,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_5= DNA_ref ^ (DNA_read>>4);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shr_two = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_5[i] || DNA_5[i+1])
@@ -416,6 +423,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_9= DNA_ref ^ (DNA_read>>6);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shr_three = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_9[i] || DNA_9[i+1])
@@ -464,6 +472,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_10= DNA_ref ^ (DNA_read>>8);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shr_four = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_10[i] || DNA_10[i+1])
@@ -513,6 +522,7 @@ reg [7:0] count;
                 ////////////////////////////////////////////////////////
                 DNA_11= DNA_ref ^ (DNA_read>>10);            //shift for 4bits coz each SNP is encoded by two bits
                 index=0;
+                DNA_shr_five = {(LENGTH/2){1'b0}};
                 for (i = 0; i < LENGTH; i = i + 2)
                 begin
                     if(DNA_11[i] || DNA_11[i+1])

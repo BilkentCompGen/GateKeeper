@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_gtx_cpllpd_ovrd.v
-// Version    : 3.0
+// Version    : 4.1
 `timescale 1ns / 1ps
 module pcie3_7x_0_gtx_cpllpd_ovrd (                                                                                        
     input   i_ibufds_gte2,                                                                                     

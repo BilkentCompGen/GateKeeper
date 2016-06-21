@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_qpll_wrapper.v
-// Version    : 3.0
+// Version    : 4.1
 
 `timescale 1ns / 1ps
 
@@ -131,6 +131,7 @@ generate if (PCIE_GT_DEVICE == "GTP")
     begin : gtp_common
 
     //---------- GTP Common Module ---------------------------------------------
+(* SET_SPEEDUP_SIM_TRUE = "TRUE"*)
     GTPE2_COMMON #
     (
        
@@ -238,6 +239,7 @@ else if (PCIE_GT_DEVICE == "GTH")
     begin : gth_common
     
     //---------- GTX Common Module ---------------------------------------------
+(* SET_SPEEDUP_SIM_TRUE = "TRUE"*)
     GTHE2_COMMON #
     (
        
@@ -334,6 +336,7 @@ else
     begin : gtx_common
 
     //---------- GTX Common Module ---------------------------------------------
+(* SET_SPEEDUP_SIM_TRUE = "TRUE"*)
     GTXE2_COMMON #
     (
        

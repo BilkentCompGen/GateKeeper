@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_gt_wrapper.v
-// Version    : 3.0
+// Version    : 4.1
 //------------------------------------------------------------------------------
 //  Filename     :  pcie3_7x_0_gt_wrapper.v
 //  Description  :  GT Wrapper Module for 7 Series Transceiver
@@ -109,6 +109,7 @@ module pcie3_7x_0_gt_wrapper #
     input               GT_RX_CONVERGE,
     
     //---------- GT Clock Ports ----------------------------
+    input		GT_CPLLPDREFCLK,
     input               GT_GTREFCLK0,
     input               GT_QPLLCLK,
     input               GT_QPLLREFCLK,
@@ -176,6 +177,7 @@ module pcie3_7x_0_gt_wrapper #
     input       [ 2:0]  GT_TXMARGIN,
     input               GT_TXSWING,
     input               GT_TXDEEMPH,
+    input               GT_TXINHIBIT,
     input       [ 4:0]  GT_TXPRECURSOR,
     input       [ 6:0]  GT_TXMAINCURSOR,
     input       [ 4:0]  GT_TXPOSTCURSOR,
@@ -202,6 +204,7 @@ module pcie3_7x_0_gt_wrapper #
     output              GT_DRPRDY,
     
     //---------- GT TX Sync Ports --------------------------
+    input       [15:0]  GT_PCSRSVDIN,
     input               GT_TXPHALIGN,     
     input               GT_TXPHALIGNEN,  
     input               GT_TXPHINIT, 
@@ -267,7 +270,10 @@ module pcie3_7x_0_gt_wrapper #
     output              GT_RXPRBSERR,
     
     //---------- GT Debug Ports ----------------------------
-    output      [14:0]  GT_DMONITOROUT
+    output      [14:0]  GT_DMONITOROUT,
+   
+    input               TXPDELECIDLEMODE,
+    input               POWERDOWN
 
 );
 
@@ -281,9 +287,10 @@ module pcie3_7x_0_gt_wrapper #
     wire        [14:0]  dmonitorout;
     wire                dmonitorclk;
 
-
     wire cpllpd;
     wire cpllrst;
+
+    wire txpdelecidlemode_mux;
 
     //---------- Select CPLL and Clock Dividers ------------
     localparam          CPLL_REFCLK_DIV = 1;
@@ -431,14 +438,9 @@ module pcie3_7x_0_gt_wrapper #
     //------------------------------------------------------
     assign rxlpmen = GT_GEN3 ? ((PCIE_LPM_DFE_GEN3 == "LPM") ? 1'd1 : 1'd0) : ((PCIE_LPM_DFE == "LPM") ? 1'd1 : 1'd0);
   
-wire gt_refclk;
-
-BUFG gInst (
-   .I (GT_GTREFCLK0), 
-   .O (gt_refclk));
-
+    assign txpdelecidlemode_mux = (POWERDOWN) ? TXPDELECIDLEMODE : 1'b0;
 pcie3_7x_0_gtx_cpllpd_ovrd cpllPDInst (
-   .i_ibufds_gte2(gt_refclk),
+   .i_ibufds_gte2(GT_CPLLPDREFCLK),
    .o_cpllpd_ovrd(cpllpd),
    .o_cpllreset_ovrd(cpllrst));
 
@@ -475,6 +477,7 @@ generate if (PCIE_GT_DEVICE == "GTP")
     begin : gtp_channel
 
     //---------- GTP Channel Module --------------------------------------------
+(* SET_SPEEDUP_SIM_TRUE = "TRUE"*)
     GTPE2_CHANNEL #
     (
                 
@@ -845,7 +848,7 @@ generate if (PCIE_GT_DEVICE == "GTP")
         .TXMARGIN                       (GT_TXMARGIN),                          //
         .TXSWING                        (GT_TXSWING),                           //
         .TXDEEMPH                       (GT_TXDEEMPH),                          //
-        .TXINHIBIT                      (1'd0),                                 // 
+        .TXINHIBIT                      (GT_TXINHIBIT),//(1'd0),                                 // 
         .TXBUFDIFFCTRL                  (3'b100),                               // 
         .TXDIFFCTRL                     (4'b1100),                              // Select 850mV 
         .TXPRECURSOR                    (GT_TXPRECURSOR),                       // 
@@ -895,7 +898,7 @@ generate if (PCIE_GT_DEVICE == "GTP")
         //---------- PCS -------------------------------------------------------                
         .TXPCSRESET                     (GT_TXPCSRESET),                        //
         .RXPCSRESET                     (GT_RXPCSRESET),                        //
-        .PCSRSVDIN                      (16'd0),                                // [0]: 1 = TXRATE async, [1]: 1 = RXRATE async    
+        .PCSRSVDIN                      (GT_PCSRSVDIN),//(16'd0),                                // [0]: 1 = TXRATE async, [1]: 1 = RXRATE async    
         
         .PCSRSVDOUT                     (),                                     // 
         
@@ -1091,6 +1094,7 @@ else if (PCIE_GT_DEVICE == "GTH")
     begin : gth_channel
     
     //---------- GTH Channel Module --------------------------------------------
+(* SET_SPEEDUP_SIM_TRUE = "TRUE"*)
     GTHE2_CHANNEL #
     (
                
@@ -1493,7 +1497,7 @@ else if (PCIE_GT_DEVICE == "GTH")
         
         //---------- Command ---------------------------------------------------
         .TXDETECTRX                     (GT_TXDETECTRX),                        //
-        .TXPDELECIDLEMODE               ( 1'd0),                                //
+        .TXPDELECIDLEMODE               ( txpdelecidlemode_mux ),                                //
         .RXELECIDLEMODE                 ( 2'd0),                                //
         .TXELECIDLE                     (GT_TXELECIDLE),                        //
         .TXCHARDISPMODE                 ({7'd0, GT_TXCOMPLIANCE}),              //
@@ -1511,7 +1515,7 @@ else if (PCIE_GT_DEVICE == "GTH")
         .TXMARGIN                       (GT_TXMARGIN),                          //
         .TXSWING                        (GT_TXSWING),                           //
         .TXDEEMPH                       (GT_TXDEEMPH),                          //
-        .TXINHIBIT                      (1'd0),                                 // 
+        .TXINHIBIT                      (GT_TXINHIBIT),//(1'd0),                                 // 
         .TXBUFDIFFCTRL                  (3'b100),                               // 
         .TXDIFFCTRL                     (4'b1111),                              // Select 850mV
         .TXPRECURSOR                    (GT_TXPRECURSOR),                       // 
@@ -1539,33 +1543,33 @@ else if (PCIE_GT_DEVICE == "GTH")
         .DRPRDY                         (GT_DRPRDY),                            // 
                                                                               
         //---------- PMA -------------------------------------------------------
-        .TXPMARESET                     (GT_TXPMARESET),                        //
-        .RXPMARESET                     (GT_RXPMARESET),                        //
-        .RXLPMEN                        (rxlpmen),                              // ***
-        .RXLPMHFHOLD                    (GT_RX_CONVERGE),                       // Set to 1 after convergence
-        .RXLPMHFOVRDEN                  ( 1'd0),                                // 
-        .RXLPMLFHOLD                    (GT_RX_CONVERGE),                       // Set to 1 after convergence
-        .RXLPMLFKLOVRDEN                ( 1'd0),                                // 
-        .TXQPIBIASEN                    ( 1'd0),                                // 
-        .TXQPISTRONGPDOWN               ( 1'd0),                                // 
-        .TXQPIWEAKPUP                   ( 1'd0),                                // 
-        .RXQPIEN                        ( 1'd0),                                // Optimized for IES
-        .PMARSVDIN                      ( 5'd0),                                // 
-        .GTRSVD                         (16'd0),                                // 
+        .TXPMARESET                     (GT_TXPMARESET),                       //
+        .RXPMARESET                     (GT_RXPMARESET),                       //
+        .RXLPMEN                        (rxlpmen),                             // ***
+        .RXLPMHFHOLD                    (GT_RX_CONVERGE),                      // Set to 1 after convergence
+        .RXLPMHFOVRDEN                  (1'd0),                                // 
+        .RXLPMLFHOLD                    (GT_RX_CONVERGE),                      // Set to 1 after convergence
+        .RXLPMLFKLOVRDEN                (1'd0),                                // 
+        .TXQPIBIASEN                    (1'd0),                                // 
+        .TXQPISTRONGPDOWN               (1'd0),                                // 
+        .TXQPIWEAKPUP                   (1'd0),                                // 
+        .RXQPIEN                        (1'd0),                                // Optimized for IES
+        .PMARSVDIN                      (5'd0),                                // 
+        .GTRSVD                         (16'd0),                               // 
                                                                               
-        .TXQPISENP                      (),                                     // 
-        .TXQPISENN                      (),                                     // 
-        .RXQPISENP                      (),                                     // 
-        .RXQPISENN                      (),                                     // 
-        .DMONITOROUT                    (dmonitorout),                          // GTH 15-bits.
+        .TXQPISENP                      (),                                    // 
+        .TXQPISENN                      (),                                    // 
+        .RXQPISENP                      (),                                    // 
+        .RXQPISENN                      (),                                    // 
+        .DMONITOROUT                    (dmonitorout),                         // GTH 15-bits.
                                                                               
         //---------- PCS -------------------------------------------------------                 
-        .TXPCSRESET                     (GT_TXPCSRESET),                        //
-        .RXPCSRESET                     (GT_RXPCSRESET),                        //
-        .PCSRSVDIN                      (16'd0),                                // [0]: 1 = TXRATE async, [1]: 1 = RXRATE async  
-        .PCSRSVDIN2                     ( 5'd0),                                // 
-                                                                                
-        .PCSRSVDOUT                     (),                                     // 
+        .TXPCSRESET                     (GT_TXPCSRESET),                       //
+        .RXPCSRESET                     (GT_RXPCSRESET),                       //
+        .PCSRSVDIN                      (GT_PCSRSVDIN),//(16'd0),                                // [0]: 1 = TXRATE async, [1]: 1 = RXRATE async    
+        .PCSRSVDIN2                     ( 5'd0),                               // 
+                                                                               
+        .PCSRSVDOUT                     (),                                    // 
        
         //---------- CDR -------------------------------------------------------                  
         .RXCDRRESET                     (GT_RXCDRRESET),                        //
@@ -1736,7 +1740,6 @@ else if (PCIE_GT_DEVICE == "GTH")
         .TX8B10BBYPASS                  (8'd0),                                 //
         .TX8B10BEN                      (!GT_GEN3),                             // 0 = disable TX 8b10b in Gen3
         .RX8B10BEN                      (!GT_GEN3),                             // 0 = disable RX 8b10b in Gen3
-        
         .RXDISPERR                      (GT_RXDISPERR),                         //
         .RXNOTINTABLE                   (GT_RXNOTINTABLE),                      //
     
@@ -1797,6 +1800,7 @@ else
     begin : gtx_channel
 
     //---------- GTX Channel Module --------------------------------------------
+(* SET_SPEEDUP_SIM_TRUE = "TRUE"*)
     GTXE2_CHANNEL #
     (
                
@@ -2140,7 +2144,7 @@ else
         .TXMARGIN                       (GT_TXMARGIN),                          //
         .TXSWING                        (GT_TXSWING),                           //
         .TXDEEMPH                       (GT_TXDEEMPH),                          //
-        .TXINHIBIT                      (1'd0),                                 // 
+        .TXINHIBIT                      (GT_TXINHIBIT),//(1'd0),                                 // 
         .TXBUFDIFFCTRL                  (3'b100),                               // 
         .TXDIFFCTRL                     (4'b1100),                              // 
         .TXPRECURSOR                    (GT_TXPRECURSOR),                       // 
@@ -2192,7 +2196,7 @@ else
         //---------- PCS -------------------------------------------------------                
         .TXPCSRESET                     (GT_TXPCSRESET),                        //
         .RXPCSRESET                     (GT_RXPCSRESET),                        //
-        .PCSRSVDIN                      (16'd0),                                // [0]: 1 = TXRATE async, [1]: 1 = RXRATE async  
+        .PCSRSVDIN                      (GT_PCSRSVDIN),//(16'd0),                                // [0]: 1 = TXRATE async, [1]: 1 = RXRATE async    
         .PCSRSVDIN2                     ( 5'd0),                                // 
                                                                                 
         .PCSRSVDOUT                     (),                                     // 

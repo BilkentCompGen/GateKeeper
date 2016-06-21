@@ -50,7 +50,7 @@
 //
 // Project    : Virtex-7 FPGA Gen3 Integrated Block for PCI Express
 // File       : pcie3_7x_0_qpll_reset.v
-// Version    : 3.0
+// Version    : 4.1
 //----------------------------------------------------------------------------//
 //  Filename     :  pcie3_7x_0_qpll_reset.v
 //  Description  :  QPLL Reset Module for 7 Series Transceiver

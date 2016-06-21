@@ -114,7 +114,7 @@ module SHD_top #(parameter C_PCI_DATA_WIDTH = 128) (
     genvar i;
     generate
         for(i = 0; i < NUM_PES; i = i + 1) begin
-            SHD_PE #(.DNA_DATA_WIDTH(C_PCI_DATA_WIDTH)) i_pe (
+            SHD_PE #(.DNA_DATA_WIDTH(C_PCI_DATA_WIDTH), .NUM(i)) i_pe (
                 .clk(clk),
                 .rst(rst),
                 
