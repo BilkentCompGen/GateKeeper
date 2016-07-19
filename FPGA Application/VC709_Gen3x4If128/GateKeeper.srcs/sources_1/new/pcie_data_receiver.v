@@ -1,28 +1,10 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: Hasan Hassan
-// 
-// Create Date: 08/18/2015 09:16:16 PM
-// Design Name: 
-// Module Name: pcie_data_receiver
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
+
 
 `include "riffa.vh"
 
 //Gets data from RIFFA and informs the Scheduler about data waiting to be processed
-module pcie_data_receiver #(parameter C_PCI_DATA_WIDTH = 128) (
+module pcie_data_receiver #(parameter C_PCI_DATA_WIDTH = 128, NUM_PES = 8) (
     input clk,
     input rst,
     
@@ -36,9 +18,13 @@ module pcie_data_receiver #(parameter C_PCI_DATA_WIDTH = 128) (
     
     //Scheduler Interface
     input dna_rd_en,
-    output[C_PCI_DATA_WIDTH - 1:0] dna_data, //TODO: consider separate pci and dna data widths
-    output[C_PCI_DATA_WIDTH - 1:0] dna_data_ref,
+    output[C_PCI_DATA_WIDTH - 1:0] dna_data,
     output dna_valid,
+    
+    // RefRead Manager Interface
+    output reg refread_set,
+    output reg[PE_BITS - 1:0] refread_cluster_id,
+    output reg[C_PCI_DATA_WIDTH - 1:0] refread_data,
     
     //Sender Interface
     output reg[`SIG_CHNL_LENGTH_W - 1:0] dna_len,
@@ -46,8 +32,11 @@ module pcie_data_receiver #(parameter C_PCI_DATA_WIDTH = 128) (
     output reg sender_en
 );
 
-reg[C_PCI_DATA_WIDTH - 1:0] dna_r, dna_ref_r;
-//reg dna_valid_r = 0;
+parameter PE_BITS = $clog2(NUM_PES);
+
+reg[C_PCI_DATA_WIDTH - 1:0] dna_r;
+
+reg[PE_BITS - 1:0] ref_counter = 0;
 
 reg[1:0] state = 0, state_next;
 localparam STATE_IDLE = 2'b00;
@@ -81,7 +70,8 @@ always@* begin
         
         STATE_FETCH_REF: begin
             if(CHNL_RX_DATA_VALID) begin
-                state_next <= STATE_PROCESSING;
+                if(ref_counter == (NUM_PES - 1))
+                    state_next <= STATE_PROCESSING;
             end        
         end //STATE_FETCH_REF
         
@@ -125,23 +115,49 @@ always@(posedge clk) begin
     end
 end
 
-//save the refrence dna data
+// ref_counter logic
 always@(posedge clk) begin
     if(rst) begin
-        dna_ref_r <= 0;
-        dna_r <= 0;
-        recv_fifo_wren <= 1'b0;
+        ref_counter <= 0;
     end
     else begin
+        case(state)
+            STATE_IDLE: begin
+                ref_counter <= 0;
+            end
+            STATE_FETCH_REF: begin
+                if(CHNL_RX_DATA_VALID) begin
+                    ref_counter <= ref_counter + 1;
+                end
+            end
+        endcase
+    end
+end
+
+//fetch the dna reads
+always@(posedge clk) begin
+    if(rst) begin
+        dna_r <= 0;
+        recv_fifo_wren <= 1'b0;
+        
+        /*refread_set <= 1'b0;
+        refread_cluster_id <= 0;
+        refread_data <= 0;*/
+    end
+    else begin
+        //refread_set <= 1'b0;
+    
         if(CHNL_RX_DATA_VALID) begin
             case(state)
                 STATE_IDLE: begin
                     recv_fifo_wren <= 1'b0;
                 end //STATE_IDLE
                 
-                STATE_FETCH_REF: begin
-                    dna_ref_r <= CHNL_RX_DATA;
-                end
+                /*STATE_FETCH_REF: begin
+                    refread_set <= 1'b1;
+                    refread_cluster_id <= ref_counter;
+                    refread_data <= CHNL_RX_DATA;
+                end*/
                 
                 STATE_PROCESSING: begin
                     if(~recv_fifo_full) begin
@@ -159,62 +175,25 @@ always@(posedge clk) begin
     end
 end
 
-
-/*always@(posedge clk) begin
-    if(rst) begin
-        dna_valid_r <= 1'b0;
-        dna_r <= 0;
-        dna_ref_r <= 0;
-        recv_fifo_wren <= 1'b0;
-        
-        state <= STATE_IDLE;
-    end
-    else begin
-        recv_fifo_wren <= 1'b0;
+always@* begin
+    refread_set = 1'b0;
+    refread_cluster_id = {PE_BITS{1'bx}};
+    refread_data = {C_PCI_DATA_WIDTH{1'bx}};
     
-        if(~recv_fifo_full) begin
-            case(state)
-                STATE_IDLE: begin
-                    
-                    if(sender_ready) begin
-                        
-                    end
-                    if(CHNL_RX_DATA_VALID) begin
-                        state <= S_DATA_REF;
-                        dna_r <= CHNL_RX_DATA;
-                    end
-                end //S_DATA
-                
-                S_DATA_REF: begin
-                    if(CHNL_RX_DATA_VALID) begin
-                        state <= S_DATA;
-                        dna_ref_r <= CHNL_RX_DATA;
-                        recv_fifo_wren <= 1'b1;
-                    end
-                end //S_DATA_REF
-            endcase
-        end
+    if((state == STATE_FETCH_REF) && CHNL_RX_DATA_VALID) begin
+        refread_set = 1'b1;
+        refread_cluster_id = ref_counter;
+        refread_data = CHNL_RX_DATA;
     end
-end*/
-
-/*always@(posedge clk) begin
-    if(rst) begin
-        dna_len <= 0;
-    end
-    else begin
-        if(CHNL_RX) begin
-            dna_len <= CHNL_RX_LEN >> 5;
-        end
-    end
-end*/
+end
 
 pcie_recv_fifo i_recv_fifo(
     .clk(clk),      // input wire clk
     .srst(rst),    // input wire srst
-    .din({dna_r, dna_ref_r}),      // input wire [255 : 0] din
+    .din({dna_r}),      // input wire [255 : 0] din
     .wr_en(recv_fifo_wren),  // input wire wr_en
     .rd_en(dna_rd_en & dna_valid),  // input wire rd_en
-    .dout({dna_data, dna_data_ref}),    // output wire [255 : 0] dout
+    .dout({dna_data}),    // output wire [255 : 0] dout
     .full(recv_fifo_full),    // output wire full
     .empty(recv_fifo_empty)  // output wire empty
 );

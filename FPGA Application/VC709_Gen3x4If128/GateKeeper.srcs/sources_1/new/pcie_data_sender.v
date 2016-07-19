@@ -1,27 +1,8 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: Hasan Hassan
-// 
-// Create Date: 08/24/2015 06:51:37 PM
-// Design Name: 
-// Module Name: pcie_data_sender
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 `include "riffa.vh"
 
-module pcie_data_sender #(parameter C_PCI_DATA_WIDTH = 128, INPUT_DATA_WIDTH = 8) (
+module pcie_data_sender #(parameter C_PCI_DATA_WIDTH = 128, INPUT_DATA_WIDTH = 8, NUM_PES = 8) (
         input clk,
         input rst,
         
@@ -45,7 +26,7 @@ module pcie_data_sender #(parameter C_PCI_DATA_WIDTH = 128, INPUT_DATA_WIDTH = 8
         input en
     );
     
-    localparam DATA_PER_TX = C_PCI_DATA_WIDTH/INPUT_DATA_WIDTH; //number of data chunk that can with in C_PCI_DATA_WIDTH
+    localparam DATA_PER_TX = C_PCI_DATA_WIDTH/INPUT_DATA_WIDTH; //number of data chunks that can fit with in C_PCI_DATA_WIDTH
     parameter IT_BITS = $clog2(DATA_PER_TX);
     
     
@@ -67,8 +48,8 @@ module pcie_data_sender #(parameter C_PCI_DATA_WIDTH = 128, INPUT_DATA_WIDTH = 8
             case(state)
                 STATE_IDLE: begin
                     if(en) begin
-                        dna_len_r <= (dna_len - 1) >> IT_BITS;
-                        send_len <= (dna_len - 1) >> (IT_BITS - 2);
+                        dna_len_r <= (dna_len - NUM_PES)*NUM_PES >> 7 /*to 128-bit chunks*/ ; // excluding reference dna reads
+                        send_len <= (dna_len - NUM_PES)*NUM_PES >> 5/*to 32-bit words*/; // excluding reference dna reads
                         state <= STATE_SENDING;
                     end
                 end //STATE_IDLE

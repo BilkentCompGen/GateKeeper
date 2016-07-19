@@ -17,7 +17,11 @@ uint* rbuf, *wrbuf;
 uint dna_size = 0;
 uint numOutputElements = 0;
 
-const uint NUM_RIFFA_CHANNELS = 1;
+const uint NUM_REFS = 8; // first NUM_REFS reads of each stream are used
+                         // as reference dna reads
+
+const uint NUM_RIFFA_CHANNELS = 1; // multiple channels are currently not supported. 
+                                   // See doGateKeeper().
 thread collector_threads[NUM_RIFFA_CHANNELS];
 
 void createWriteBuffer(){
@@ -25,18 +29,18 @@ void createWriteBuffer(){
     assert(sizeof(uint) == 4);
 
     //Input Buffer
-    wrbuf = new uint[(dna_size/sizeof(uint)) + 4];
+    wrbuf = new uint[(dna_size/sizeof(uint)) + 4*NUM_REFS];
     
     //Fill input buffer with dummy data
-    for(uint i = 0; i < ((dna_size/sizeof(uint)) + 4); i++){
+    for(uint i = 0; i < ((dna_size/sizeof(uint)) + 4*NUM_REFS); i++){
         wrbuf[i] = i;
     }
 }
 
 void createReadBuffer(){
-	//Output Buffer, one mapping is 128-bit (x2 dna and dna_ref). Each mapping produces 8-bit output
-    uint numMappings = (dna_size/16/*128-bit*/);
-    numOutputElements = ceil(numMappings/4.0);
+	//Output Buffer, one mapping is 128-bit. Each mapping produces 1-bit output
+    uint numMappings = (dna_size/16/*128-bit*/)*NUM_REFS;
+    numOutputElements = ceil(numMappings/32.0);
     cout << "numOutputElements: " << numOutputElements << endl;
     rbuf = new uint[numOutputElements];
 }
@@ -50,13 +54,15 @@ void sendDataToFPGA(void* data, const uint size, const uint ch){
     //cout << "DNAData sent: " << sent << endl;
 }
 
+// TODO: To run with more than one RIFFA channels, we should send the reference reads
+// to each channel separately.
 void doGateKeeper(){
     
     //start sender threads, send data pointer, data size, and channel as arguments
     thread sender_threads[NUM_RIFFA_CHANNELS];
 
     for(uint i = 0; i < NUM_RIFFA_CHANNELS; i++){
-        sender_threads[i] = thread(sendDataToFPGA, (void*)(wrbuf + i*(dna_size/NUM_RIFFA_CHANNELS)/sizeof(uint)), ((dna_size/NUM_RIFFA_CHANNELS)/sizeof(uint)) + 4, i);
+        sender_threads[i] = thread(sendDataToFPGA, (void*)(wrbuf + i*(dna_size/NUM_RIFFA_CHANNELS)/sizeof(uint)), ((dna_size/NUM_RIFFA_CHANNELS)/sizeof(uint)) + 4*NUM_REFS, i);
     }
 
 
@@ -176,18 +182,18 @@ void readFastaFile(const char* filename){
 	dna_size = num_mappings*16;
 
 	//Allocate the input buffer
-	wrbuf = new uint[(num_mappings + 1)*4];
+	wrbuf = new uint[(num_mappings + NUM_REFS)*4];
 
 	uint ind = 0;
 	while(getline(fasta_in, line)){
 		parseMapping(line, wrbuf + ind);
 		ind += 4;
 
-		if(ind == (num_mappings+1)*4)
+		if(ind == (num_mappings + NUM_REFS)*4)
 			break;
 	}
 
-	if(ind != (num_mappings+1)*4){
+	if(ind != (num_mappings + NUM_REFS)*4){
 		fasta_in.close();
 		cout << "Error: Insufficient data in the input file! Exiting..." << endl;
         exit(-1);

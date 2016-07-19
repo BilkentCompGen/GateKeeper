@@ -89,11 +89,27 @@ module SHD_top_tb();
     //                      92'b11010100111110000100111101101110000111011101011111011101110101010001010101111111100101010101,
     //                      92'b11110101010010010001000010000100010011111011101111111101111011100101100001010100101000010011 };
     
-    wire[127:0] data[0:4] = {128'hffffffff_ffffffff_ffffffff_ffffffff,
+    wire[127:0] data[0:15] = {
                           128'h0000000_0000000_0000000_0000000,
                           128'h0000000_0000000_0000000_0000000,
-                          128'h0000000_0000000_0000000_0000000, 
-                          128'h0000000_0000000_0000000_0000000};
+                          128'h0000000_0000000_0000000_0000000,
+                          128'h0000000_0000000_0000000_0000000,
+                          
+                          128'h0000000_0000000_0000000_0000000,
+                          128'h0000000_0000000_0000000_0000000,
+                          128'h0000000_0000000_0000000_0000000,
+                          128'h0000000_0000000_0000000_0000000,
+                          
+                          
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'hffffffff_ffffffff_ffffffff_ffffffff,
+                          128'hffffffff_ffffffff_ffffffff_ffffffff};
     
     reg[31:0] data_sent = 0;
     //Data Sender : always send data and increment the data value when sent
@@ -112,7 +128,7 @@ module SHD_top_tb();
     
     //assign CHNL_RX_DATA[91:0] = data[data_state];
     //assign CHNL_RX_DATA[127:92] = 0;
-    assign CHNL_RX_DATA = data[data_state%5];
+    assign CHNL_RX_DATA = (data_state > 8) ? data[9] : data[data_state];
     /*assign CHNL_RX_DATA[31:0] = data_sent*4;
     assign CHNL_RX_DATA[63:32] = data_sent*4 + 1;
     assign CHNL_RX_DATA[95:64] = data_sent*4 + 2;

@@ -20,7 +20,7 @@ DNA_MinErrors
 input [LENGTH-1:0] DNA_read, DNA_ref;
  reg [(LENGTH/2)-1:0] DNA_nsh, DNA_shl_one, DNA_shl_two, DNA_shl_three, DNA_shl_four, DNA_shl_five, DNA_shr_one, DNA_shr_two, DNA_shr_three, DNA_shr_four, DNA_shr_five, DNA_out;
                 
-output reg [7:0] DNA_MinErrors;
+output reg DNA_MinErrors;
 
 reg [LENGTH-1:0] DNA_1, DNA_2, DNA_3, DNA_4, DNA_5, DNA_6, DNA_7, DNA_8, DNA_9, DNA_10, DNA_11;
 integer index, i;
@@ -58,7 +58,7 @@ reg [7:0] count;
                   count = count+1;
             end
             if (count <= ErrorThreshold) 
-                DNA_MinErrors = 8'b11111111;
+                DNA_MinErrors = 1'b1;
             else
             begin
                 ////////////////////////////////////////////////////////
@@ -592,9 +592,9 @@ reg [7:0] count;
                     end
                 end
 				if (count <= ErrorThreshold) 
-					DNA_MinErrors = 8'b11111111;
+					DNA_MinErrors = 1'b1;
 				else
-					DNA_MinErrors = 8'b00000000;
+					DNA_MinErrors = 1'b0;
            
 				
             end // else Hamming Distance

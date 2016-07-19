@@ -447,7 +447,7 @@ module DNAMapper_top
          
      generate
      for(chnl = 0; chnl < C_NUM_CHNL; chnl = chnl + 1) begin
-        SHD_top #(.C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH)) i_SHD_top(
+        SHD_top #(.C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH), .NUM_CLUSTERS(8), .NUM_PES(8)) i_SHD_top(
             //RIFFA Interface
             .riffa_clk(user_clk),
             .riffa_rst(rst_out),    // riffa_reset includes riffa_endpoint resets

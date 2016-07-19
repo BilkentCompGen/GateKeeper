@@ -58,10 +58,10 @@ shd_fifo your_instance_name (
   .rst(rst),        // input wire rst
   .wr_clk(wr_clk),  // input wire wr_clk
   .rd_clk(rd_clk),  // input wire rd_clk
-  .din(din),        // input wire [255 : 0] din
+  .din(din),        // input wire [127 : 0] din
   .wr_en(wr_en),    // input wire wr_en
   .rd_en(rd_en),    // input wire rd_en
-  .dout(dout),      // output wire [255 : 0] dout
+  .dout(dout),      // output wire [127 : 0] dout
   .full(full),      // output wire full
   .empty(empty)    // output wire empty
 );
