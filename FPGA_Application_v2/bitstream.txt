@@ -1,0 +1,1 @@
+compile and generate a bitstream file using Vivado
